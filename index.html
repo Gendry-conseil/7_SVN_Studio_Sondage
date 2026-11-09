@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Étude de marché – 7 SVN STUDIO</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #2c4c3b;      /* vert sauge foncé */
+    --accent: #bf652a;       /* terracotta (assez foncé pour un texte blanc lisible) */
+    --accent-dark: #a3541f;
+    --bg: #f9f6f0;           /* fond crème */
+    --ink: #333333;
+    --line: #e0dcd3;
+    --error: #b3261e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Montserrat', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.6;
+  }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  .container {
+    max-width: 800px;
+    margin: 40px auto;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.08);
+  }
+
+  /* En-tête */
+  .header-image {
+    min-height: 250px;
+    padding: 24px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; color: #fff;
+    border-radius: 12px 12px 0 0;
+    background-color: var(--primary);
+    background-image:
+      linear-gradient(rgba(44,76,59,.72), rgba(44,76,59,.72)),
+      url('https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=1350&q=80');
+    background-size: cover; background-position: center;
+  }
+  .header-image h1 { margin: 0; font-size: 2.2em; letter-spacing: 2px; text-transform: uppercase; }
+  .header-image p { max-width: 600px; margin: 12px 0 0; font-weight: 300; font-size: 1.1em; }
+  .header-image .meta { font-size: .95em; opacity: .9; }
+
+  /* Barre de progression */
+  .progress {
+    position: sticky; top: 0; z-index: 10;
+    background: #fff; border-bottom: 1px solid var(--line);
+    padding: 10px 40px;
+  }
+  .progress-track { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
+  .progress-bar { height: 100%; width: 0; background: var(--primary); transition: width .25s ease; }
+  .progress-label { margin: 6px 0 0; font-size: .8em; color: #666; }
+
+  form, .panel { padding: 10px 40px 40px; }
+  .panel { padding-top: 40px; }
+
+  .section-title {
+    color: var(--primary); font-size: 1.4em;
+    border-bottom: 2px solid var(--primary);
+    padding-bottom: 8px; margin: 40px 0 20px;
+  }
+
+  /* Question */
+  fieldset.question {
+    margin: 0 0 24px; padding: 20px;
+    background: #fafafa; border: 1px solid var(--line); border-radius: 8px;
+  }
+  fieldset.question.invalid { border-color: var(--error); background: #fff6f5; }
+  legend { padding: 0 6px; font-weight: 600; font-size: 1.05em; }
+  .hint { display: block; margin: 0 0 12px; font-size: .85em; font-weight: 400; color: #666; }
+  .q-error { display: none; margin: 10px 0 0; font-size: .9em; color: var(--error); }
+  .invalid .q-error { display: block; }
+
+  .options { list-style: none; margin: 0; padding: 0; }
+  .options li { margin-bottom: 10px; }
+  label { cursor: pointer; }
+  .options label { display: flex; align-items: flex-start; gap: 10px; }
+  input[type=radio], input[type=checkbox] {
+    flex: none; width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--primary);
+  }
+  input:disabled + span { color: #999; }
+  input:disabled, input:disabled ~ * { cursor: not-allowed; }
+  input[type=text] {
+    width: 100%; margin-top: 10px; padding: 10px;
+    border: 1px solid var(--line); border-radius: 6px; font: inherit;
+  }
+  .other-input[hidden] { display: none; }
+
+  fieldset.question.sub { margin-left: 20px; border-left: 4px solid var(--accent); }
+
+  /* Information (description du concept) */
+  .info {
+    margin: 0 0 24px; padding: 16px 20px;
+    border-left: 4px solid var(--accent); background: #fdf3ea; border-radius: 0 8px 8px 0;
+  }
+  .info strong { display: block; margin-bottom: 4px; }
+  .info p { margin: 0; }
+
+  /* Grilles */
+  .grid-wrap { overflow-x: auto; }
+  table.grid { width: 100%; border-collapse: collapse; margin-top: 8px; background: #fff; }
+  .grid th, .grid td { padding: 8px; text-align: center; border-bottom: 1px solid var(--line); }
+  .grid thead th { background: var(--primary); color: #fff; font-weight: 400; font-size: .85em; }
+  .grid tbody th { text-align: left; font-weight: 600; }
+  .cell { display: flex; justify-content: center; padding: 6px; }
+  .cell-label {
+    position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+  }
+
+  /* Boutons */
+  .btn {
+    display: block; width: 100%; margin-top: 32px; padding: 15px;
+    font: inherit; font-size: 1.1em; font-weight: 600; color: #fff;
+    background: var(--accent); border: 0; border-radius: 8px; cursor: pointer;
+  }
+  .btn:hover { background: var(--accent-dark); }
+  .btn:disabled { opacity: .6; cursor: wait; }
+  .btn.secondary { background: #fff; color: var(--primary); border: 2px solid var(--primary); }
+  .btn.secondary:hover { background: #eef3ef; }
+  .form-error { margin: 14px 0 0; color: var(--error); font-weight: 600; min-height: 1.4em; }
+
+  /* Écrans de fin */
+  .panel h2 { margin-top: 0; color: var(--primary); }
+  .test-box { margin-top: 20px; padding: 14px 16px; background: #fdf3ea; border-radius: 8px; font-size: .9em; }
+  .test-box pre { white-space: pre-wrap; word-break: break-word; font-size: .8em; }
+
+  @media (max-width: 640px) {
+    .container { margin: 0; border-radius: 0; }
+    .header-image { border-radius: 0; }
+    .header-image h1 { font-size: 1.8em; }
+    .progress, form, .panel { padding-left: 20px; padding-right: 20px; }
+    fieldset.question { padding: 16px; }
+
+    /* Les grilles deviennent une carte par ligne */
+    .grid thead { display: none; }
+    .grid, .grid tbody, .grid tr, .grid td, .grid tbody th { display: block; width: 100%; }
+    .grid tr { margin-bottom: 12px; padding: 8px 12px; background: #fff; border: 1px solid var(--line); border-radius: 10px; }
+    .grid th, .grid td { padding: 0; border: 0; }
+    .grid tbody th { padding: 6px 0 4px; }
+    .cell { justify-content: flex-start; align-items: center; gap: 10px; padding: 8px 0; }
+    .cell-label { position: static; width: auto; height: auto; clip: auto; white-space: normal; }
+  }
+  @media (prefers-reduced-motion: reduce) { .progress-bar { transition: none; } }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header class="header-image">
+    <h1>7 SVN STUDIO</h1>
+    <p>Aidez-nous à façonner la friperie éphémère de demain. Votre avis compte pour créer un événement mode unique !</p>
+    <p class="meta">15 questions, 4 à 5 minutes. Vos réponses sont anonymes.</p>
+  </header>
+
+  <div class="progress" id="progress">
+    <div class="progress-track"><div class="progress-bar" id="progress-bar"></div></div>
+    <p class="progress-label" id="progress-label" aria-live="polite">0 / 15 questions</p>
+  </div>
+
+  <form id="survey" novalidate></form>
+
+  <!-- Écran de fin pour les personnes hors cible -->
+  <div class="panel" id="stop-panel" hidden>
+    <h2>Merci de votre intérêt</h2>
+    <p id="stop-text"></p>
+    <button type="button" class="btn secondary" id="stop-back">Modifier ma réponse</button>
+  </div>
+
+  <!-- Écran de fin après envoi -->
+  <div class="panel" id="done-panel" hidden>
+    <h2 id="done-title">Merci pour votre participation !</h2>
+    <p id="done-text"></p>
+    <div class="test-box" id="test-box" hidden>
+      <strong>Mode test : rien n’a été envoyé.</strong>
+      <p>Aucune adresse de collecte n’est configurée (<code>ENDPOINT</code> dans le script). Voici ce qui serait envoyé :</p>
+      <details><summary>Afficher les données</summary><pre id="test-json"></pre></details>
+    </div>
+    <button type="button" class="btn secondary" id="retry-btn" hidden>Réessayer l’envoi</button>
+  </div>
+
+  <noscript><div class="panel"><p>Ce questionnaire nécessite JavaScript. Merci de l’activer pour répondre.</p></div></noscript>
+</div>
+
+<script>
+/* ============================================================
+   CONFIGURATION
+   ============================================================ */
+
+// Adresse de collecte (Web App Google Apps Script). Vide = mode test : rien n'est envoyé.
+const ENDPOINT = "https://script.google.com/macros/s/AKfycbxpTZv8VO836KvTQ4T23CPCeyzLCFkk1xBLCiEJ5ntsV_Jb-Xd4VM7JQfRLrjUeTgBA/exec";
+
+/* ============================================================
+   CONTENU DU QUESTIONNAIRE
+   Pour modifier une question : changer son texte (text) ou ses options (o).
+   Types : single = choix unique, multi = choix multiples (max = limite),
+           grid = grille (une réponse par ligne), info = texte d'explication.
+   Chaque option : { v: code enregistré, t: texte affiché }.
+   stop: 'age' ou 'achat' met fin au questionnaire (hors cible).
+   other: true ajoute un champ « préciser ».
+   sub + showAfter: sous-question qui apparaît une fois la question indiquée remplie.
+   ============================================================ */
+const SURVEY = [
+  { title: "Faisons connaissance", items: [
+    { id: "q1", type: "single", text: "Quelle est votre tranche d’âge ?", o: [
+      { v: "moins_18", t: "Moins de 18 ans", stop: "age" },
+      { v: "18_25",    t: "18 – 25 ans" },
+      { v: "26_35",    t: "26 – 35 ans" },
+      { v: "plus_35",  t: "Plus de 35 ans", stop: "age" } ] },
+    { id: "q1b", label: "Q1b", type: "single", sub: true, showAfter: "q1", text: "Quel est votre genre ?", o: [
+      { v: "femme", t: "Femme" },
+      { v: "homme", t: "Homme" },
+      { v: "autre", t: "Autre / Non binaire" },
+      { v: "nsp",   t: "Je préfère ne pas me prononcer" } ] },
+    { id: "q2", type: "single", text: "Où résidez-vous actuellement ?", o: [
+      { v: "bordeaux",  t: "Bordeaux intra-muros" },
+      { v: "metropole", t: "Métropole bordelaise / Périphérie" },
+      { v: "autre",     t: "Autre ville / Région", other: true } ] },
+    { id: "q3", type: "single", text: "Avez-vous acheté au moins un vêtement ou accessoire de seconde main au cours des 12 derniers mois ?", o: [
+      { v: "oui", t: "Oui" },
+      { v: "non", t: "Non", stop: "achat" } ] }
+  ] },
+
+  { title: "Vos habitudes d’achat et le juste prix", items: [
+    { id: "q4", type: "multi", max: 2, text: "Où achetez-vous principalement vos vêtements de seconde main ?", o: [
+      { v: "en_ligne",          t: "Applications / Sites en ligne (Vinted, LeBonCoin…)" },
+      { v: "friperie_physique", t: "Friperies physiques permanentes" },
+      { v: "popup",             t: "Événements éphémères / Pop-up stores" },
+      { v: "brocante_asso",     t: "Brocantes / Vide-greniers / Associations (Emmaüs, Croix-Rouge…)" } ] },
+    { id: "q5", type: "single", text: "En moyenne, combien de pièces de seconde main achetez-vous par mois ?", o: [
+      { v: "moins_1", t: "Moins d’une pièce par mois (occasionnel)" },
+      { v: "1_2",     t: "1 à 2 pièces par mois" },
+      { v: "3_5",     t: "3 à 5 pièces par mois" },
+      { v: "plus_5",  t: "Plus de 5 pièces par mois" } ] },
+    { id: "q6", type: "single", text: "Quel est votre budget mensuel moyen consacré à la seconde main ?", o: [
+      { v: "moins_20", t: "Moins de 20 €" },
+      { v: "20_40",    t: "20 € à 40 €" },
+      { v: "41_70",    t: "41 € à 70 €" },
+      { v: "plus_70",  t: "Plus de 70 €" } ] },
+    { id: "q7", type: "grid",
+      text: "Quel est le prix maximum que vous êtes prêt(e) à payer pour les articles suivants en friperie (en parfait état) ?",
+      cols: [ { v: "1", t: "Moins de 15 €" }, { v: "2", t: "15 € – 25 €" }, { v: "3", t: "26 € – 35 €" },
+              { v: "4", t: "36 € – 50 €" }, { v: "5", t: "Plus de 50 €" } ],
+      rows: [ { id: "q7_tshirt",  t: "T-shirt / Top vintage" },
+              { id: "q7_jean",    t: "Jean classique (ex. Levi’s)" },
+              { id: "q7_veste",   t: "Veste légère / Sweat" },
+              { id: "q7_manteau", t: "Manteau / Veste en cuir" } ] },
+    { id: "q8", type: "single", text: "Êtes-vous d’accord avec l’affirmation : « De nombreuses friperies abusent des prix sous prétexte d’étiqueter leurs pièces comme “vintage” » ?", o: [
+      { v: "5", t: "Tout à fait d’accord" },
+      { v: "4", t: "Plutôt d’accord" },
+      { v: "3", t: "Neutre" },
+      { v: "2", t: "Plutôt pas d’accord" },
+      { v: "1", t: "Pas du tout d’accord" } ] }
+  ] },
+
+  { title: "L’expérience pop-up", items: [
+    { type: "info", head: "Un pop-up, c’est quoi ?",
+      text: "7 SVN STUDIO est un projet de friperie éphémère dédiée à la mode vintage : vêtements, sacs et chaussures de seconde main, sélectionnés par les fondateurs en France et en Europe, dans un lieu qui mêle mode et expositions artistiques. Le point de vente s’installe temporairement dans une ville, puis repart ailleurs." },
+    { id: "q9", type: "multi", max: 2, text: "Qu’est-ce qui vous inciterait le plus à visiter une friperie éphémère (pop-up) plutôt qu’à acheter en ligne ?", o: [
+      { v: "exclusivite", t: "Le sentiment d’exclusivité et la peur de rater l’événement" },
+      { v: "essayage",    t: "L’essayage immédiat des pièces et la vérification des coupes et matières" },
+      { v: "ambiance",    t: "L’ambiance générale et le lieu de vie (musique, café, animations)" },
+      { v: "prix_promos", t: "Les prix fixes ou promotions spéciales événementielles" } ] },
+    { id: "q10", type: "multi", max: 2, text: "Quels éléments pourraient vous faire renoncer à visiter un pop-up friperie ?", o: [
+      { v: "foule",       t: "La surfréquentation et les longues files d’attente à l’entrée" },
+      { v: "revendeurs",  t: "La crainte que les meilleures pièces soient dévalisées dès l’ouverture par des revendeurs" },
+      { v: "prix_eleves", t: "Des prix jugés trop élevés" },
+      { v: "eloignement", t: "L’éloignement géographique / le temps de trajet" } ] },
+    { id: "q11", type: "single", text: "Pour limiter la cohue à l’ouverture, seriez-vous favorable à un système d’accès sur réservation de créneaux gratuits en ligne ?", o: [
+      { v: "oui_creneaux", t: "Oui, absolument" },
+      { v: "oui_coupefile", t: "Oui, si cela me garantit un accès rapide (coupe-file)" },
+      { v: "non_libre",    t: "Non, je préfère venir librement" },
+      { v: "indifferent",  t: "Indifférent(e)" } ] },
+    { id: "q12", type: "grid",
+      text: "Évaluez l’intérêt des animations suivantes pour vous donner envie de venir et de passer du temps sur place :",
+      cols: [ { v: "1", t: "Pas du tout intéressant" }, { v: "2", t: "Peu intéressant" },
+              { v: "3", t: "Intéressant" }, { v: "4", t: "Très intéressant" } ],
+      rows: [ { id: "q12_dj",       t: "Ambiance musicale (DJ sets)" },
+              { id: "q12_cafe",     t: "Espace détente / Coin café et pâtisserie" },
+              { id: "q12_retouche", t: "Atelier de retouche / ajustement de taille sur place" },
+              { id: "q12_custo",    t: "Atelier de customisation / personnalisation" } ] }
+  ] },
+
+  { title: "Déplacement et communication", items: [
+    { id: "q13", type: "single", text: "Quel temps de trajet (aller) êtes-vous prêt(e) à effectuer pour vous rendre sur un événement pop-up friperie qui propose une expérience complète (animations, café, DJ) ?", o: [
+      { v: "15", t: "Moins de 15 minutes" },
+      { v: "30", t: "15 à 30 minutes" },
+      { v: "45", t: "30 à 45 minutes" },
+      { v: "90", t: "45 minutes à 1 h 30" } ] },
+    { id: "q14", type: "multi", max: 2, text: "Par quel(s) canal(aux) découvrez-vous habituellement ce type d’événement éphémère ?", o: [
+      { v: "reseaux_marque",   t: "Réseaux sociaux de la marque (Instagram Reels / TikTok)" },
+      { v: "comptes_locaux",   t: "Comptes d’actualités et de sorties locales (ex. Quoi faire à Bordeaux)" },
+      { v: "bouche_a_oreille", t: "Recommandation d’amis / bouche-à-oreille" },
+      { v: "affichage",        t: "Affichage urbain / posters dans la rue" } ] },
+    { id: "q15", type: "single", text: "Comment aimeriez-vous être prévenu(e) de la prochaine tournée du pop-up dans votre ville pour ne pas la rater ?", o: [
+      { v: "story_insta",      t: "Story / publication Instagram" },
+      { v: "sms",              t: "Alerte par SMS" },
+      { v: "newsletter",       t: "E-mail / newsletter mesurée" },
+      { v: "invitation_event", t: "Invitation / événement privé sur un réseau social" } ] }
+  ] }
+];
+
+const STOP_MESSAGES = {
+  age:   "Cette étude s’adresse aux personnes de 18 à 35 ans. Merci d’avoir pris le temps de répondre.",
+  achat: "Cette étude s’adresse aux personnes qui ont acheté au moins un article de seconde main au cours des 12 derniers mois. Merci d’avoir pris le temps de répondre."
+};
+
+/* ============================================================
+   CODE (pas besoin d'y toucher pour modifier les questions)
+   ============================================================ */
+const form = document.getElementById('survey');
+const QUESTIONS = SURVEY.flatMap(s => s.items).filter(i => i.type !== 'info');
+const TOTAL = QUESTIONS.filter(q => !q.sub).length;   // les sous-questions ne comptent pas dans le total
+const sessionId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
+                  : Date.now().toString(36) + Math.random().toString(36).slice(2);
+let startedAt = null;
+let lastPayload = null;
+
+function el(tag, attrs, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === 'class') n.className = v; else n.setAttribute(k, v);
+  }
+  kids.flat().forEach(k => n.append(k));
+  return n;
+}
+
+/* ----- Construction du formulaire ----- */
+function legend(q) {
+  const lg = el('legend', {});
+  lg.append(el('span', {}, (q.label || q.id.toUpperCase()) + '. '), q.text);
+  return lg;
+}
+function hintFor(q) {
+  if (q.type === 'multi') return el('span', { class: 'hint' }, 'Maximum ' + q.max + ' choix');
+  if (q.type === 'grid') return el('span', { class: 'hint' }, 'Une réponse par ligne');
+  return null;
+}
+function buildOptions(q) {
+  const ul = el('ul', { class: 'options' });
+  q.o.forEach((opt, i) => {
+    const input = el('input', { type: q.type === 'multi' ? 'checkbox' : 'radio', name: q.id, value: opt.v });
+    if (opt.stop) input.dataset.stop = opt.stop;
+    if (opt.other) input.dataset.other = '1';
+    const li = el('li', {}, el('label', {}, input, el('span', {}, opt.t)));
+    if (opt.other) {
+      const txt = el('input', { type: 'text', name: q.id + '_precision', class: 'other-input',
+                                placeholder: 'Précisez…', 'aria-label': 'Précisez votre réponse', hidden: '' });
+      li.append(txt);
+    }
+    ul.append(li);
+  });
+  return ul;
+}
+function buildGrid(q) {
+  const head = el('tr', {}, el('th', { scope: 'col' }, 'Article / animation'),
+                  q.cols.map(c => el('th', { scope: 'col' }, c.t)));
+  const body = q.rows.map(r => el('tr', {}, el('th', { scope: 'row' }, r.t),
+    q.cols.map(c => el('td', {}, el('label', { class: 'cell' },
+      el('input', { type: 'radio', name: r.id, value: c.v }),
+      el('span', { class: 'cell-label' }, c.t))))));
+  return el('div', { class: 'grid-wrap' },
+            el('table', { class: 'grid' }, el('thead', {}, head), el('tbody', {}, body)));
+}
+function buildQuestion(q) {
+  const fs = el('fieldset', { class: 'question' + (q.sub ? ' sub' : ''), 'data-q': q.id });
+  if (q.sub) fs.hidden = true;
+  fs.append(legend(q));
+  const h = hintFor(q); if (h) fs.append(h);
+  fs.append(q.type === 'grid' ? buildGrid(q) : buildOptions(q));
+  fs.append(el('p', { class: 'q-error' }, 'Merci de répondre à cette question.'));
+  return fs;
+}
+SURVEY.forEach(section => {
+  form.append(el('h2', { class: 'section-title' }, section.title));
+  section.items.forEach(item => {
+    if (item.type === 'info') {
+      form.append(el('div', { class: 'info' }, el('strong', {}, item.head), el('p', {}, item.text)));
+    } else {
+      form.append(buildQuestion(item));
+    }
+  });
+});
+form.append(el('button', { type: 'submit', class: 'btn', id: 'submit-btn' }, 'Envoyer mes réponses'),
+            el('p', { class: 'form-error', id: 'form-error', role: 'alert' }));
+
+/* ----- Lecture des réponses ----- */
+function checked(name) { return [...form.querySelectorAll('input[name="' + name + '"]:checked')]; }
+
+function readAnswers() {
+  const a = {};
+  QUESTIONS.forEach(q => {
+    if (q.type === 'grid') {
+      q.rows.forEach(r => { const c = checked(r.id)[0]; a[r.id] = c ? c.value : ''; });
+    } else if (q.type === 'multi') {
+      a[q.id] = checked(q.id).map(c => c.value).join('|');
+    } else {
+      const c = checked(q.id)[0]; a[q.id] = c ? c.value : '';
+    }
+    if (q.o && q.o.some(o => o.other)) {
+      const t = form.querySelector('input[name="' + q.id + '_precision"]');
+      a[q.id + '_precision'] = (checked(q.id).some(c => c.dataset.other) && t) ? t.value.trim() : '';
+    }
+  });
+  return a;
+}
+function isAnswered(q, a) {
+  if (q.type === 'grid') return q.rows.every(r => a[r.id] !== '');
+  if (a[q.id] === '') return false;
+  if (q.o && q.o.some(o => o.other) && checked(q.id).some(c => c.dataset.other)) return a[q.id + '_precision'] !== '';
+  return true;
+}
+function missingQuestions() {
+  const a = readAnswers();
+  return QUESTIONS.filter(q => !isAnswered(q, a) && !(q.sub && !checked(q.showAfter).length));
+}
+
+/* ----- Interface ----- */
+function refreshProgress() {
+  const done = TOTAL - missingQuestions().filter(q => !q.sub).length;
+  document.getElementById('progress-bar').style.width = (100 * done / TOTAL) + '%';
+  document.getElementById('progress-label').textContent = done + ' / ' + TOTAL + ' questions';
+}
+function enforceMax(q) {
+  const boxes = [...form.querySelectorAll('input[name="' + q.id + '"]')];
+  const n = boxes.filter(b => b.checked).length;
+  boxes.forEach(b => { b.disabled = !b.checked && n >= q.max; });
+}
+function refreshSubQuestions() {
+  QUESTIONS.filter(q => q.sub).forEach(q => {
+    const parent = checked(q.showAfter)[0];
+    form.querySelector('fieldset[data-q="' + q.id + '"]').hidden = !(parent && !parent.dataset.stop);
+  });
+}
+function showStop(code) {
+  form.hidden = true;
+  document.getElementById('progress').hidden = true;
+  document.getElementById('stop-text').textContent = STOP_MESSAGES[code];
+  document.getElementById('stop-panel').hidden = false;
+  window.scrollTo({ top: 0 });
+}
+document.getElementById('stop-back').addEventListener('click', () => {
+  document.getElementById('stop-panel').hidden = true;
+  form.hidden = false;
+  document.getElementById('progress').hidden = false;
+});
+
+form.addEventListener('change', e => {
+  if (!startedAt) startedAt = Date.now();
+  const t = e.target;
+  const q = QUESTIONS.find(x => x.id === t.name || (x.id && t.name === x.id + '_precision'));
+  if (q && q.type === 'multi') enforceMax(q);
+  if (q && q.o && q.o.some(o => o.other)) {
+    const txt = form.querySelector('input[name="' + q.id + '_precision"]');
+    const show = checked(q.id).some(c => c.dataset.other);
+    txt.hidden = !show; if (!show) txt.value = '';
+  }
+  const fs = t.closest('fieldset.question'); if (fs) fs.classList.remove('invalid');
+  // Hors cible : fin du questionnaire
+  if (t.dataset && t.dataset.stop && t.checked) {
+    const code = t.dataset.stop;
+    send(buildPayload(code === 'age' ? 'filtre_age' : 'filtre_achat'));
+    showStop(code);
+  }
+  refreshSubQuestions();
+  refreshProgress();
+});
+form.addEventListener('input', e => {
+  if (e.target.classList.contains('other-input')) {
+    const fs = e.target.closest('fieldset.question'); if (fs) fs.classList.remove('invalid');
+    refreshProgress();
+  }
+});
+
+/* ----- Envoi ----- */
+function buildPayload(statut) {
+  return Object.assign({
+    sessionId: sessionId,
+    horodatage: new Date().toISOString(),
+    statut: statut,
+    duree_s: startedAt ? Math.round((Date.now() - startedAt) / 1000) : 0
+  }, readAnswers());
+}
+// Avec mode "no-cors", le navigateur ne peut pas lire la réponse d'Apps Script :
+// on considère l'envoi réussi s'il n'y a pas d'erreur réseau.
+async function send(payload) {
+  lastPayload = payload;
+  if (!ENDPOINT) return { ok: false, test: true };
+  try {
+    await fetch(ENDPOINT, { method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
+    return { ok: true };
+  } catch (err) { return { ok: false, error: err }; }
+}
+function showDone(result) {
+  form.hidden = true;
+  document.getElementById('progress').hidden = true;
+  const title = document.getElementById('done-title');
+  const text = document.getElementById('done-text');
+  const retry = document.getElementById('retry-btn');
+  const test = document.getElementById('test-box');
+  retry.hidden = true; test.hidden = true;
+  if (result.ok) {
+    title.textContent = 'Merci pour votre participation !';
+    text.textContent = 'Vos réponses ont bien été envoyées.';
+  } else if (result.test) {
+    title.textContent = 'Questionnaire complété';
+    text.textContent = 'Les réponses sont valides mais n’ont pas été enregistrées.';
+    document.getElementById('test-json').textContent = JSON.stringify(lastPayload, null, 2);
+    test.hidden = false;
+  } else {
+    title.textContent = 'L’envoi a échoué';
+    text.textContent = 'Vérifiez votre connexion, puis réessayez. Vos réponses sont conservées sur cette page.';
+    retry.hidden = false;
+  }
+  document.getElementById('done-panel').hidden = false;
+  window.scrollTo({ top: 0 });
+}
+document.getElementById('retry-btn').addEventListener('click', async () => {
+  const r = await send(lastPayload); showDone(r);
+});
+
+form.addEventListener('submit', async e => {
+  e.preventDefault();
+  const missing = missingQuestions();
+  form.querySelectorAll('fieldset.question').forEach(f => f.classList.remove('invalid'));
+  const err = document.getElementById('form-error');
+  if (missing.length) {
+    missing.forEach(q => form.querySelector('fieldset[data-q="' + q.id + '"]').classList.add('invalid'));
+    err.textContent = missing.length === 1 ? 'Il reste 1 question sans réponse.'
+                                           : 'Il reste ' + missing.length + ' questions sans réponse.';
+    form.querySelector('fieldset[data-q="' + missing[0].id + '"]').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+  err.textContent = '';
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true; btn.textContent = 'Envoi en cours…';
+  const result = await send(buildPayload('complet'));
+  btn.disabled = false; btn.textContent = 'Envoyer mes réponses';
+  showDone(result);
+});
+
+refreshProgress();
+</script>
+</body>
+</html>
